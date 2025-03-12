@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ollama Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .chat-container {
+            width: 90%;
+            max-width: 500px;
+            margin: 20px auto;
+            background: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: #0078ff;
+            color: white;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .chat-box {
+            height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            padding: 10px;
+            border-radius: 8px;
+            margin: 5px;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+
+        .user-message {
+            background: #0078ff;
+            color: white;
+            align-self: flex-end;
+        }
+
+        .bot-message {
+            background: #f1f1f1;
+            color: black;
+            align-self: flex-start;
+        }
+
+        .loading {
+            font-style: italic;
+            color: gray;
+        }
+
+        .input-box {
+            display: flex;
+            padding: 10px;
+            background: #fff;
+            border-top: 1px solid #ddd;
+        }
+
+        input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        button {
+            background: #0078ff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin-left: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #005fcc;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <div class="chat-header">Ollama Chatbot</div>
+        <div id="chat-box" class="chat-box"></div>
+        <div class="input-box">
+            <input type="text" id="userInput" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            let input = document.getElementById("userInput");
+            let chatBox = document.getElementById("chat-box");
+
+            if (input.value.trim() === "") return;
+
+            // Display user message
+            let userMessage = document.createElement("div");
+            userMessage.className = "message user-message";
+            userMessage.textContent = input.value;
+            chatBox.appendChild(userMessage);
+
+            // Show loading indicator
+            let loadingMessage = document.createElement("div");
+            loadingMessage.className = "message bot-message loading";
+            loadingMessage.textContent = "Thinking...";
+            chatBox.appendChild(loadingMessage);
+
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Send request to backend
+            let response = await fetch("http://127.0.0.1:8000/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: input.value })
+            });
+
+            let data = await response.json();
+            console.log("API Response:", data);
+
+
+            // Remove loading message
+            chatBox.removeChild(loadingMessage);
+
+            // Display bot response
+            let botMessage = document.createElement("div");
+            botMessage.className = "message bot-message";
+            botMessage.textContent = data.response.raw ;
+            chatBox.appendChild(botMessage);
+
+            chatBox.scrollTop = chatBox.scrollHeight;  // Auto-scroll down
+
+            input.value = "";  // Clear input field
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        }
+    </script>
+
+</body>
+</html>
